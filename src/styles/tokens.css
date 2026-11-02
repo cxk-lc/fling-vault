@@ -1,0 +1,119 @@
+/* ==========================================================================
+   设计令牌 — 取自 FLiNG 修改器本体（#1E2021 底 / #FF8000 主色 / 方角 / 细描边）
+   ========================================================================== */
+:root {
+  --bg: #1e2021;
+  --bg-frame: #17191a;
+  --bg-rail: #191b1c;
+  --bg-panel: #1b1d1e;
+  --bg-raised: #212425;
+  --bg-inset: #101213;
+  --bg-inset-2: #0c0e0f;
+
+  --line: #2a2d2e;
+  --line-soft: #232627;
+  --line-strong: #3a3e3f;
+
+  --text: #e8e9ea;
+  --text-2: #b3b6b7;
+  --text-dim: #8b8e8f;
+  --text-faint: #5f6364;
+
+  --amber: #ff8000;
+  --amber-hot: #ff9426;
+  --amber-deep: #c9660b;
+  --amber-wash: rgba(255, 128, 0, 0.1);
+  --amber-line: rgba(255, 128, 0, 0.45);
+
+  --ok: #78a55a;
+  --ok-wash: rgba(120, 165, 90, 0.12);
+  --danger: #d9503c;
+  --danger-wash: rgba(217, 80, 60, 0.12);
+
+  --font-ui: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", "Consolas", "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+
+  --rail-w: 232px;
+  --titlebar-h: 40px;
+  --toolbar-h: 58px;
+
+  --r: 2px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+  cursor: default;
+}
+
+::selection {
+  background: rgba(255, 128, 0, 0.28);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #33383a;
+  border: 3px solid var(--bg);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #454b4d;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  user-select: text;
+}
+
+a {
+  color: var(--amber);
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+dl,
+dd {
+  margin: 0;
+}
