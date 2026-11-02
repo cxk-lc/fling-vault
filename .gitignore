@@ -8,3 +8,4 @@ release3/
 release4/
 *.log
 .DS_Store
+.workbuddy/
