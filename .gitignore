@@ -9,3 +9,7 @@ release4/
 *.log
 .DS_Store
 .workbuddy/
+out*/
+.backup/
+shot_*.png
+tmp_*.png
