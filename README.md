@@ -20,15 +20,18 @@ Windows 桌面客户端：从 [flingtrainer.com](https://flingtrainer.com/) 同�
 | 启动 | 默认提权启动（修改器带 `requireAdministrator`），失败自动回退提权并提示 |
 | 快捷调用 | `Ctrl+Alt+F` 唤出搜索面板，`↑↓` 选择、`Enter` 启动；托盘常驻 + 最近启动菜单 |
 
-## 发布产物（v1.0.1）
+## 下载（v1.0.1）
 
-| 文件 | 大小 | SHA-256 |
+前往 [Releases](https://github.com/cxk-lc/fling-vault/releases/latest) 下载。GitHub 会把文件名中的空格替换为点号，属正常现象。
+
+| 资产 | 大小 | SHA-256 |
 |---|---|---|
-| `release/FLiNG Vault-1.0.1-x64.exe`（安装版） | 77.9 MB | `a424a95d8e1ee34ca8dcd239ffaa89b2fdeba77f2d30a323d4e84e991bbb09e2` |
-| `release/FLiNG Vault-1.0.1-portable.exe`（便携版） | 77.7 MB | `312e715a5bcea15ec73d3085a07f0e7e9cd4935a6115490296879d0b9adbcf6f` |
+| `FLiNG.Vault-1.0.1-x64.exe`（安装版） | 77.9 MB | `a424a95d8e1ee34ca8dcd239ffaa89b2fdeba77f2d30a323d4e84e991bbb09e2` |
+| `FLiNG.Vault-1.0.1-portable.exe`（便携版） | 77.7 MB | `312e715a5bcea15ec73d3085a07f0e7e9cd4935a6115490296879d0b9adbcf6f` |
 
 - 安装版：按用户安装（默认 `%LOCALAPPDATA%\Programs\FLiNG Vault`），可改路径、建桌面与开始菜单快捷方式；卸载会连同 `%APPDATA%\FLiNG Vault` 一起清理干净。
 - 便携版：双击即用，解压到临时目录运行，不写注册表。
+- 自行构建：`npm run dist`，产物在 `release/`。
 - 未做代码签名，首次运行可能触发 SmartScreen「未知发布者」，选择「更多信息 → 仍要运行」。
 - 变更明细见 [CHANGELOG.md](CHANGELOG.md)。
 
