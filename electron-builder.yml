@@ -9,6 +9,14 @@ files:
   - dist-electron/**/*
   - package.json
 asar: true
+# 托盘图标不参与 asar 打包，必须显式释放到 resources/build 下
+extraResources:
+  - from: build
+    to: build
+    filter:
+      - icon.png
+      - tray.png
+      - tray-16.png
 win:
   target:
     - target: nsis
@@ -24,5 +32,9 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: FLiNG Vault
+  # 卸载时清理用户数据（设置、库记录、已下载的修改器、日志）
+  deleteAppDataOnUninstall: true
+  # 卸载前结束运行中的实例，避免安装目录因文件占用而残留
+  include: build/installer.nsh
 portable:
   artifactName: ${productName}-${version}-portable.${ext}
