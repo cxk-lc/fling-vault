@@ -1,4 +1,4 @@
-# 自测报告 · FLiNG Vault 1.0.0
+# 自测报告 · FLiNG Vault 1.0.1
 
 日期：2026-11-02 · 环境：Windows 11 (10.0.26100) · Node 22.22.2 · Electron 33.4.11
 

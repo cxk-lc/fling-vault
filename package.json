@@ -1,7 +1,7 @@
 {
   "name": "fling-vault",
   "productName": "FLiNG Vault",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "FLiNG Vault - 风灵月影修改器库：下载、管理、快捷调用 FLiNG 修改器",
   "author": "FLiNG Vault",
