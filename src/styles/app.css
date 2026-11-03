@@ -376,35 +376,37 @@
   background: var(--amber-wash);
 }
 
+/* 徽标压在封面截图上，必须自带近不透明底 + 高对比文字 */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 19px;
-  padding: 0 6px;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border: 1px solid var(--line-strong);
+  height: 20px;
+  padding: 0 7px;
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(196, 202, 204, 0.55);
   border-radius: 2px;
-  color: var(--text-dim);
-  background: rgba(12, 14, 15, 0.72);
+  color: #e2e5e6;
+  background: rgba(9, 11, 12, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
 }
 .chip--amber {
-  color: var(--amber);
-  border-color: var(--amber-line);
-  background: rgba(255, 128, 0, 0.14);
+  color: #ffc178;
+  border-color: rgba(255, 193, 120, 0.65);
+  background: rgba(54, 29, 4, 0.92);
 }
 .chip--ok {
-  color: var(--ok);
-  border-color: rgba(120, 165, 90, 0.45);
-  background: var(--ok-wash);
+  color: #a6e7ae;
+  border-color: rgba(166, 231, 174, 0.6);
+  background: rgba(14, 35, 19, 0.92);
 }
 .chip--danger {
-  color: var(--danger);
-  border-color: rgba(217, 80, 60, 0.45);
-  background: var(--danger-wash);
+  color: #ff9c8c;
+  border-color: rgba(255, 156, 140, 0.6);
+  background: rgba(50, 17, 13, 0.92);
 }
 .chip--solid {
   background: var(--amber);
@@ -1018,6 +1020,27 @@
 }
 .field__control input[type="text"]:focus {
   border-color: var(--amber-line);
+}
+
+.path-cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.path-cell__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.path-cell__path {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .switch {

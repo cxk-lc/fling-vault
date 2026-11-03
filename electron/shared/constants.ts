@@ -11,6 +11,7 @@ export const REQUEST_TIMEOUT = 25000;
 
 export const IPC = {
   stats: 'app:stats',
+  appInfo: 'app:info',
   settingsGet: 'settings:get',
   settingsSet: 'settings:set',
   catalogSync: 'catalog:sync',

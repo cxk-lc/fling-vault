@@ -347,6 +347,7 @@ export default function App() {
       {settingsOpen && vault.settings ? (
         <SettingsModal
           settings={vault.settings}
+          appInfo={vault.appInfo}
           onClose={() => setSettingsOpen(false)}
           onSave={(patch) => vault.saveSettings(patch)}
           onPickFolder={() => api().settings.pickFolder()}

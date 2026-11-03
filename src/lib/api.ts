@@ -1,8 +1,10 @@
 import type {
+  AppInfo,
   AppStats,
   CatalogEntry,
   CheckResult,
   DownloadProgress,
+  LaunchResult,
   LibraryEntry,
   Settings,
 } from '@shared/types';
@@ -34,7 +36,7 @@ export interface VaultApi {
     cancel: (id: number) => Promise<boolean>;
   };
   trainer: {
-    launch: (id: number) => Promise<{ pid?: number; elevated: boolean; fallback?: boolean }>;
+    launch: (id: number) => Promise<LaunchResult>;
     checkUpdates: () => Promise<CheckResult>;
   };
   settings: {
@@ -44,6 +46,7 @@ export interface VaultApi {
   };
   system: {
     stats: () => Promise<AppStats>;
+    info: () => Promise<AppInfo>;
     togglePanel: () => Promise<void>;
     hidePanel: () => Promise<void>;
     reveal: (target: string) => Promise<void>;

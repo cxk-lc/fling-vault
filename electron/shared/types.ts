@@ -94,3 +94,18 @@ export interface CheckResult {
   checked: number;
   updates: number;
 }
+
+/** 安装信息：安装版取 exe 所在目录，便携版取 exe 所在文件夹 */
+export interface AppInfo {
+  name: string;
+  version: string;
+  packaged: boolean;
+  portable: boolean;
+  installDir: string;
+  installFolder: string;
+  dataDir: string;
+}
+
+export type LaunchResult =
+  | { ok: true; pid?: number; elevated: boolean; fallback?: boolean }
+  | { ok: false; code: 'CANCELED' | 'ELEVATION' | 'ERROR'; message: string };

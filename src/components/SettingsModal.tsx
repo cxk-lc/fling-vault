@@ -1,9 +1,10 @@
 import { useEffect, useState, type FC } from 'react';
-import type { Settings } from '@shared/types';
+import type { AppInfo, Settings } from '@shared/types';
 import { IconClose } from './Icon';
 
 interface SettingsModalProps {
   settings: Settings;
+  appInfo: AppInfo | null;
   onClose: () => void;
   onSave: (patch: Partial<Settings>) => void;
   onPickFolder: () => Promise<string | null>;
@@ -30,7 +31,7 @@ const Toggle: FC<{ on: boolean; onChange: (value: boolean) => void }> = ({ on, o
   />
 );
 
-export const SettingsModal: FC<SettingsModalProps> = ({ settings, onClose, onSave, onPickFolder }) => {
+export const SettingsModal: FC<SettingsModalProps> = ({ settings, appInfo, onClose, onSave, onPickFolder }) => {
   const [form, setForm] = useState<Settings>(settings);
   const [hotkey, setHotkey] = useState(settings.hotkey);
 
@@ -95,7 +96,21 @@ export const SettingsModal: FC<SettingsModalProps> = ({ settings, onClose, onSav
             />
           </Row>
 
-          <Row label="关于" hint="FLiNG Vault 1.0.0">
+          <Row label="安装目录" hint={appInfo?.portable ? '便携版所在文件夹' : '安装时选择的根目录'}>
+            <div className="path-cell" title={appInfo?.installDir}>
+              <span className="path-cell__name">{appInfo?.installFolder ?? '—'}</span>
+              <span className="path-cell__path">{appInfo?.installDir ?? '—'}</span>
+            </div>
+          </Row>
+
+          <Row label="数据目录" hint="设置、库记录与日志">
+            <div className="path-cell" title={appInfo?.dataDir}>
+              <span className="path-cell__name">FLiNG Vault</span>
+              <span className="path-cell__path">{appInfo?.dataDir ?? '—'}</span>
+            </div>
+          </Row>
+
+          <Row label="关于" hint={`v${appInfo?.version ?? '1.0.0'}`}>
             <span style={{ fontSize: 11.5, color: 'var(--text-faint)', lineHeight: 1.7 }}>
               非官方客户端。修改器版权归 FLiNG 所有，仅从 flingtrainer.com 下载。
             </span>

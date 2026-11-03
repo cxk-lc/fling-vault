@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC } from './shared/constants';
-import type { CatalogEntry, DownloadProgress, Settings } from './shared/types';
+import type { CatalogEntry, DownloadProgress, LaunchResult, Settings } from './shared/types';
 
 const api = {
   catalog: {
@@ -18,7 +18,7 @@ const api = {
     cancel: (id: number) => ipcRenderer.invoke(IPC.downloadCancel, id),
   },
   trainer: {
-    launch: (id: number) => ipcRenderer.invoke(IPC.trainerLaunch, id),
+    launch: (id: number): Promise<LaunchResult> => ipcRenderer.invoke(IPC.trainerLaunch, id),
     checkUpdates: () => ipcRenderer.invoke(IPC.updatesCheck),
   },
   settings: {
@@ -28,6 +28,7 @@ const api = {
   },
   system: {
     stats: () => ipcRenderer.invoke(IPC.stats),
+    info: () => ipcRenderer.invoke(IPC.appInfo),
     togglePanel: () => ipcRenderer.invoke(IPC.panelToggle),
     hidePanel: () => ipcRenderer.invoke(IPC.panelHide),
     reveal: (target: string) => ipcRenderer.invoke(IPC.shellReveal, target),

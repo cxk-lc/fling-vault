@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CatalogEntry, CheckResult, DownloadProgress, LibraryEntry, Settings } from '@shared/types';
+import type { AppInfo, CatalogEntry, CheckResult, DownloadProgress, LibraryEntry, Settings } from '@shared/types';
 import { api } from '../lib/api';
 
 export type ToastKind = 'info' | 'success' | 'error';
@@ -14,6 +14,7 @@ export function useVault() {
   const [catalogAt, setCatalogAt] = useState(0);
   const [library, setLibrary] = useState<LibraryEntry[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [downloads, setDownloads] = useState<Record<number, DownloadProgress>>({});
   const [booting, setBooting] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -38,11 +39,17 @@ export function useVault() {
   }, []);
 
   const refreshAll = useCallback(async () => {
-    const [cat, lib, cfg] = await Promise.all([api().catalog.list(), api().library.list(), api().settings.get()]);
+    const [cat, lib, cfg, info] = await Promise.all([
+      api().catalog.list(),
+      api().library.list(),
+      api().settings.get(),
+      api().system.info(),
+    ]);
     setCatalog(cat.entries);
     setCatalogAt(cat.updatedAt);
     setLibrary(lib);
     setSettings(cfg);
+    setAppInfo(info);
     setBooting(false);
   }, []);
 
@@ -123,6 +130,14 @@ export function useVault() {
     async (id: number, title: string) => {
       try {
         const result = await api().trainer.launch(id);
+        if (!result.ok) {
+          if (result.code === 'CANCELED') {
+            notify('已取消管理员授权，修改器未启动', 'info');
+          } else {
+            notify(`启动失败：${result.message}`, 'error');
+          }
+          return;
+        }
         const mode = result.fallback ? '已提权（需要管理员权限）' : result.elevated ? '管理员模式' : '普通模式';
         notify(`已启动 ${title} · ${mode}`, 'success');
         await refreshLibrary();
@@ -186,6 +201,7 @@ export function useVault() {
     catalogAt,
     library,
     settings,
+    appInfo,
     downloads,
     booting,
     syncing,

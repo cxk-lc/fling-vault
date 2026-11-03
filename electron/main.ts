@@ -13,10 +13,10 @@ import {
   Tray,
 } from 'electron';
 import path from 'node:path';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { IPC } from './shared/constants';
-import type { CatalogEntry, DownloadProgress, Settings } from './shared/types';
+import type { AppInfo, CatalogEntry, DownloadProgress, LaunchResult, Settings } from './shared/types';
 import {
   appStats,
   checkUpdates,
@@ -30,7 +30,7 @@ import {
   syncCatalog,
 } from './services/library';
 import { cancelDownload, installTrainer } from './services/installer';
-import { ElevationRequiredError, launchTrainer } from './services/launcher';
+import { ElevationCanceledError, ElevationRequiredError, launchTrainer } from './services/launcher';
 import { fetchDetail } from './services/site';
 import { log } from './services/logger';
 
@@ -71,12 +71,51 @@ function registerAppProtocol(): void {
   });
 }
 
-function iconPath(): string | undefined {
-  const candidates = [
-    path.join(process.resourcesPath ?? '', 'build', 'icon.png'),
-    path.join(app.getAppPath(), 'build', 'icon.png'),
+// 打包后图标由 extraResources 复制到 resources/build/tray.png；
+// 内联一份 32px PNG 作为兜底，避免任何情况下托盘出现空白占位。
+const TRAY_FALLBACK_PNG =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABzElEQVR4nO2Xv27TUBjFf9f3OnaaRMmAlBEWxMJQqRsrAwtiY+7aLjwC6nO0CxO8AwvPUIkt79AKURLHxP6qz39IGrWqndgEiRzpxlbyOfd895xjXxs5Q9ghvF1OviewXwGFq2OYREAqZMZ5LRGwgX7Ao8GdV6ipQ0AEjIUvlwGTa0tohXStxhQrdODg5HBG6BfXNUKAnMDFZci3SQcvFNL7Okxh1BWOX0aEHdWrYQlGgRD0JDtqt95Ke3r6O4UnXcE81vamBBKBRVoMgWhh/piyJOB7leWvT0Ch3SmRgS98fvuTfpAvtRJQWZSA/lZ+1zgBhRQTvX4aE3Rz7TOU8YsbTsFDsDrhaubjfHVsWx4ou1fz/VoYTr/26dhl3D6+mjIepEiSS9XaCngG5gl8+h5mk2cxBT4czRgPyQlU/S92DLfJRer2wML7F9EdCfT+oIY0bccwFeg54fzNDWY1Bep+JdCmCUuo7lczwxBBiq41FXW6V9R7Gpr8UavDFkPPSxNuAlen+MfcEE0NkctlaGI77aoUZd2l8O55zLNRkhmw50t23JaFqfVe4K9tSHTjsSVcneIkXm7JStP9VQLWbOG2f/VO6O0J8L9LcAverJIhgPCr4QAAAABJRU5ErkJggg==';
+
+function trayImage(): Electron.NativeImage {
+  // Windows 托盘按 DPI 取 16/32px 两种位图：用多表示（addRepresentation）拼一个 nativeImage，
+  // 100% 缩放取 1x，200% 取 2x，避免单张图被拉伸发虚。
+  const dirs = [
+    path.join(process.resourcesPath ?? '', 'build'),
+    path.join(app.getAppPath(), 'build'),
   ];
-  return candidates.find((candidate) => candidate && existsSync(candidate));
+  for (const dir of dirs) {
+    const small = path.join(dir, 'tray-16.png');
+    const large = path.join(dir, 'tray.png');
+    if (!existsSync(small) || !existsSync(large)) continue;
+    try {
+      const image = nativeImage.createEmpty();
+      image.addRepresentation({ scaleFactor: 1, buffer: readFileSync(small) });
+      image.addRepresentation({ scaleFactor: 2, buffer: readFileSync(large) });
+      if (!image.isEmpty()) {
+        log('tray', '图标已加载', { dir, size: image.getSize() });
+        return image;
+      }
+    } catch (error) {
+      log('tray', '图标加载失败', String(error));
+    }
+  }
+  log('tray', '图标资源缺失，使用内置图标');
+  return nativeImage.createFromDataURL(TRAY_FALLBACK_PNG);
+}
+
+/** 安装根目录：便携版取 PORTABLE_EXECUTABLE_DIR，安装版取 exe 所在目录。 */
+function resolveAppInfo(): AppInfo {
+  const portableDir = process.env.PORTABLE_EXECUTABLE_DIR;
+  const installDir = portableDir ?? (app.isPackaged ? path.dirname(app.getPath('exe')) : app.getAppPath());
+  return {
+    name: app.getName(),
+    version: app.getVersion(),
+    packaged: app.isPackaged,
+    portable: Boolean(portableDir),
+    installDir,
+    installFolder: path.basename(installDir) || installDir,
+    dataDir: app.getPath('userData'),
+  };
 }
 
 function createMainWindow(): void {
@@ -204,8 +243,7 @@ function recentItems(limit = 5) {
 }
 
 function buildTray(): void {
-  const icon = iconPath();
-  tray = new Tray(icon ? nativeImage.createFromPath(icon).resize({ width: 16, height: 16 }) : nativeImage.createEmpty());
+  tray = new Tray(trayImage());
   tray.setToolTip('FLiNG Vault — 风灵月影修改器库');
   const menu = Menu.buildFromTemplate([
     {
@@ -221,6 +259,7 @@ function buildTray(): void {
       label: `启动 · ${item.title}`,
       click: () => {
         launchTrainer(item.id).catch((error) => {
+          if (error instanceof ElevationCanceledError) return;
           dialog.showErrorBox('启动失败', String(error?.message ?? error));
         });
       },
@@ -267,17 +306,34 @@ function registerIpc(): void {
 
   ipcMain.handle(IPC.downloadCancel, (_event, id: number) => cancelDownload(id));
 
-  ipcMain.handle(IPC.trainerLaunch, async (_event, id: number) => {
+  ipcMain.handle(IPC.trainerLaunch, async (_event, id: number): Promise<LaunchResult> => {
+    const fail = (error: unknown): LaunchResult => {
+      const err = error as Error;
+      const code =
+        err instanceof ElevationCanceledError
+          ? 'CANCELED'
+          : err instanceof ElevationRequiredError
+            ? 'ELEVATION'
+            : 'ERROR';
+      return { ok: false, code, message: err?.message ?? '未知错误' };
+    };
+
     try {
-      return await launchTrainer(id);
+      return { ok: true, ...(await launchTrainer(id)) };
     } catch (error) {
+      // 非管理员模式被系统拒绝时，自动改走提权
       if (error instanceof ElevationRequiredError) {
-        const result = await launchTrainer(id, true);
-        return { ...result, fallback: true };
+        try {
+          return { ok: true, ...(await launchTrainer(id, true)), fallback: true };
+        } catch (inner) {
+          return fail(inner);
+        }
       }
-      throw error;
+      return fail(error);
     }
   });
+
+  ipcMain.handle(IPC.appInfo, () => resolveAppInfo());
 
   ipcMain.handle(IPC.trainerRemove, (_event, id: number) => {
     const ok = removeEntry(id);
