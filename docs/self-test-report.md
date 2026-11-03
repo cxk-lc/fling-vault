@@ -68,3 +68,49 @@ $ npm run smoke -- "Phantom Blade Zero"
 ## 5. 回归建议
 
 每次改动 `electron/services/site.ts` 后必须重跑 `npm run smoke -- "Phantom Blade Zero"`，重点看 `options` 是否仍为 36、`size` 是否非 0。
+
+---
+
+## 6. 1.0.1 修复批次（4 项）
+
+### 6.1 点击启动后修改器不出现
+
+**根因**：旧实现把 `Start-Process -Verb RunAs` 拼成字符串交给 `-Command`，并且只在**外壳进程 spawn 成功**时就返回成功——UAC 被拒、命令解析失败、修改器秒退都被吞掉，界面仍提示「已启动」。
+
+**修复**：
+- 改用 `-EncodedCommand`（UTF-16LE Base64）传脚本，规避路径空格与中文引号的解析问题；
+- `-PassThru` 拿到真实 PID（UAC 通过后才返回）；
+- 启动后**观察 6 秒**并采集 `MainWindowTitle`，秒退时回传退出码；
+- 失败按 HResult（`0x800704C7` / NativeErrorCode `1223`）判定「用户取消」，不再依赖本地化文案；
+- 渲染层按 `LaunchResult` 区分「已启动 / 已取消 / 启动失败」三种提示。
+
+**验证**：日志 `[launch] powershell-result {"code":0,"stdout":"RUNNING:26300:《影之刃零》 v1.0 三十六项修改器"}`，用户确认窗口正常弹出。
+
+### 6.2 已安装 / 未安装标签对比度不足
+
+**根因**：徽标底色 `rgba(12,14,15,0.72)` 让封面截图透出，配 9.5px `#8B8E8F` 文字；在亮色封面上实测对比度仅 **3.05:1**（低于 WCAG AA 4.5:1）。
+
+**修复**：底色提到 0.9–0.92 不透明度、字号 10.5px/600、文字改为高亮色（`#E2E5E6` / `#A6E7AE` / `#FFC178`），并加 0.55 透明度描边与 1px 文字阴影。
+
+**验证**：暗封面 15.4:1、亮封面 12.4:1（未安装）；已安装 11.5:1 / 9.2:1，均超过 AAA。
+
+### 6.3 卸载后残留文件夹
+
+**根因**：卸载程序运行时自身就在 `$INSTDIR` 中，`RMDir /r` 删不掉「自己所在的目录」，只留下一个空文件夹。
+
+**修复**：`customUnInstall` 改为：先 `taskkill` 结束实例 → 删除 `%APPDATA%` / `%LOCALAPPDATA%` 数据 → 写一个自删除批处理到 `%TEMP%` 并分离执行，等卸载程序退出后 `rmdir` 安装目录（12 次重试）。
+关键一行是批处理里的 `cd /d "%TEMP%"`：**命令行的当前目录若指向被删目录，`rmdir` 必定失败**（已单独复现验证）。
+
+**验证**（静默安装 → 静默卸载）：
+```
+✔ 安装目录已彻底删除   ✔ 数据目录已删除
+✔ 开始菜单已清理       ✔ 桌面快捷方式已清理   ✔ Programs 下无残留
+```
+
+### 6.4 托盘图标显示异常
+
+**根因**：`iconPath()` 在打包后查找 `resources/build/icon.png`，但 `electron-builder.yml` 没有 `extraResources`，文件根本不在包里 → `nativeImage.createEmpty()` → Windows 收到空图标。
+
+**修复**：新增 `extraResources` 释放 `tray.png` / `tray-16.png`；图标改为透明底橙色 F，并用 `addRepresentation` 同时提供 1x(16px) / 2x(32px)，避免缩放发虚；另内置 Base64 兜底图标。
+
+**验证**：日志 `[tray] 图标已加载 {"size":{"width":16,"height":16}}`；托盘溢出面板中显示为透明底橙色 F，无白块/空位。
